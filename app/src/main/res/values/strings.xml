@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">GoogleLoginDemo</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+
+    <!-- TODO add the following strings to access Google Games APIs -->
+    <string name="singin_other_error">There was an issue with sign-in, please try again later</string>
+    <string name="signin_failure">Unable to sign in</string>
+    <!-- TODO end of additional strings -->
+
+    <!--TODO add the following strings for sing in screen items -->
+    <string name="sign_in_explanation">Sign with Google to upload your achievements and share with friends.</string>
+    <string name="you_are_signed_in">You are signed in with Google.</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="sign_in_different_user">Sign in a different user</string>
+    <!--TODO end of the additional strings -->
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--TODO add the following resources for Google Play Services -->
+    <!-- App ID for Google Play Services -->
+    <string name="app_id">707412439810</string>
+    <!--TODO End of resources to add -->
+
+</resources>
