@@ -2,6 +2,7 @@ package com.examplelogin.googlelogindemo;
 
 //TODO import these:
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.games.Games;
 import com.google.example.games.basegameutils.BaseGameUtils;
@@ -13,6 +14,7 @@ import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 
 //TODO implement the GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener and View.OnClickListener interfaces
@@ -25,7 +27,9 @@ public class MainActivity extends ActionBarActivity implements
     // Google Api Client
     private GoogleApiClient mGoogleApiClient;
     // Request code to invoke sign in user interactions
-    private static int RC_SIGN_IN = 9001;
+    private static int REQUEST_CODE_SIGN_IN = 9001;
+    // Request code to invoke the Google Play Services status
+    private static int REQUEST_CODE_PLAY_SERVICES = 1001;
     // Are we currently resolving a connection failure?
     private boolean mResolvingConnectionFailure = false;
     // Has user clicked the sign-in button?
@@ -66,7 +70,10 @@ public class MainActivity extends ActionBarActivity implements
         Log.d(TAG, "onStart():---");
 
         super.onStart();
-
+        if (!mResolvingConnectionFailure) {
+            Log.d(TAG, "onStart(): connecting");
+            mGoogleApiClient.connect();
+        }
         Log.d(TAG, "onStart(): end ---");
     }
 
@@ -87,6 +94,17 @@ public class MainActivity extends ActionBarActivity implements
         Log.d(TAG, "onStop(): end ---");
     }
 
+
+    @Override
+    protected void onResume() {
+        Log.d(TAG, "onResume():---");
+        super.onResume();
+        if (checkPlayServices()) {
+            Log.d(TAG, "onResume(): called checkePlayServices()");
+            // Good to go
+        }
+        Log.d(TAG, "onResume(): end ---");
+    }
 
     // Notify when sign-in is successful
     @Override
@@ -121,7 +139,7 @@ public class MainActivity extends ActionBarActivity implements
             mResolvingConnectionFailure = true;
             // Attempt to resolve the connection failure using BaseGameUtils.
             if(!BaseGameUtils.resolveConnectionFailure(this, mGoogleApiClient, connectionResult,
-                    RC_SIGN_IN, getString(R.string.singin_other_error))) {
+                    REQUEST_CODE_SIGN_IN, getString(R.string.singin_other_error))) {
                 mResolvingConnectionFailure = false;
             }
         }
@@ -143,21 +161,52 @@ public class MainActivity extends ActionBarActivity implements
     }
 
 
-    // Handle the result of the connection resolution
+    // Check that the Google Play Services is correctly installed and configured on the device
+    public boolean checkPlayServices() {
+        Log.d(TAG, "checkPlayServices():---");
+        int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+
+        if(status != ConnectionResult.SUCCESS) {
+            if (GooglePlayServicesUtil.isUserRecoverableError(status)) {
+                showErrorDialog(status);
+            } else {
+                Toast.makeText(this,R.string.device_not_supported,Toast.LENGTH_LONG).show();
+            }
+            Log.d(TAG, "checkPlayServices(): end --- Error was not recoverable");
+            return false;
+        }
+        Log.d(TAG, "checkPlayServices(): end --- Play Services status == " + status);
+        return true;
+    }
+
+
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         Log.d(TAG, "onActivityResult(): ---");
 
-        if (requestCode == RC_SIGN_IN) {
+        // Handle the result of the connection resolution
+        if (requestCode == REQUEST_CODE_SIGN_IN) {
             mSignInClicked = false;
             mResolvingConnectionFailure = false;
             if (resultCode == RESULT_OK) {
-                Log.d(TAG, "onActivityResult(): connecting requestCode== " + requestCode);
-                mGoogleApiClient.connect();
+                // The app is not connected or attempting to connect
+                if (!mGoogleApiClient.isConnecting() && !mGoogleApiClient.isConnected()) {
+                    Log.d(TAG, "onActivityResult(): connecting requestCode== " + requestCode);
+                    mGoogleApiClient.connect();
+                }
             } else {
                 // Bring up an error dialog to alert the user that sign-in failed.
                 BaseGameUtils.showActivityResultError(this, requestCode, resultCode, R.string.signin_failure);
             }
         }
+        // Handle the result of the Google Play Services resolution
+        if (requestCode == REQUEST_CODE_PLAY_SERVICES) {
+            if (resultCode == RESULT_CANCELED) {
+                Toast.makeText(this,R.string.play_services_must_be_installed, Toast.LENGTH_SHORT).show();
+                finish();
+            }
+            return;
+        }
+        super.onActivityResult(requestCode, resultCode,intent);
 
         Log.d(TAG, "onActivityResult(): end ---" );
     }
@@ -208,9 +257,16 @@ public class MainActivity extends ActionBarActivity implements
         findViewById(R.id.mainTextView).setVisibility(View.GONE);
     }
 
+
     // Is user signed in?
     private boolean isUserSignedIn() {
         return (mGoogleApiClient != null && mGoogleApiClient.isConnected());
+    }
+
+
+    //
+    private void showErrorDialog(int code) {
+        GooglePlayServicesUtil.getErrorDialog(code, this, REQUEST_CODE_PLAY_SERVICES).show();
     }
     //TODO end of methods implementation
 }

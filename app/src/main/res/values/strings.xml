@@ -14,5 +14,7 @@
     <string name="you_are_signed_in">You are signed in with Google.</string>
     <string name="sign_out">Sign Out</string>
     <string name="sign_in_different_user">Sign in a different user</string>
+    <string name="device_not_supported">This device is not supported</string>
+    <string name="play_services_must_be_installed">Google Play Services must be installed</string>
     <!--TODO end of the additional strings -->
 </resources>
